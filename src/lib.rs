@@ -6,7 +6,6 @@ mod fallback;
 use crate::app::*;
 //use crate::fallback::file_and_error_handler;
 
-use actix_web::dev::Server;
 use async_std::task;
 use std::io::Read;
 use std::io::Write;
@@ -31,8 +30,8 @@ pub fn return_info() -> sharedtypes::PluginInfo {
         }),
     }
 }
+#[cfg(feature = "ssr")]
 #[no_mangle]
-#
 pub fn on_start(reader: &mut os_pipe::PipeReader, writer: &mut os_pipe::PipeWriter) {
     task::block_on(call());
 }
@@ -46,40 +45,39 @@ fn get_current_working_dir() -> std::io::Result<PathBuf> {
     use std::env;
     env::current_dir()
 }
-#[actix_web::main]
+
+/*#[actix_web::main]
 async fn call() -> Server {
-    use actix_files::Files;
-    use actix_web::dev::Server;
-    use actix_web::*;
-    use leptos::*;
-    use leptos_actix::{generate_route_list, LeptosRoutes};
-    use tokio::time::{sleep_until, Duration, Instant};
-    dbg!(get_current_working_dir());
-    let conf = get_configuration(Some("./Plugins/webapi/Cargo.toml"))
-        .await
-        .unwrap();
-    let addr = conf.leptos_options.site_addr;
-    // Generate the list of routes in your Leptos App
-    let routes = generate_route_list(App);
-    println!("listening on http://{}", &addr);
-
-    HttpServer::new(move || {
-        let leptos_options = &conf.leptos_options;
-        let site_root = &leptos_options.site_root;
-
+    HttpServer::new(|| {
         App::new()
-            .route("/api/{tail:.*}", leptos_actix::handle_server_fns())
-            // serve JS/WASM/CSS from `pkg`
-            .service(Files::new("/pkg", format!("{site_root}/pkg")))
-            // serve other assets from the `assets` directory
-            .service(Files::new("/assets", site_root))
-            // serve the favicon from /favicon.ico
-            //.service(favicon)
-            .leptos_routes(leptos_options.to_owned(), routes.to_owned(), App)
-            .app_data(web::Data::new(leptos_options.to_owned()))
-        //.wrap(middleware::Compress::default())
+            .service(hello)
+            .service(echo)
+            .route("/hey", web::get().to(manual_hello))
     })
-    .bind(&addr)
+    .bind(("127.0.0.1", 8080))
     .unwrap()
     .run()
+}*/
+
+use crate::app::*;
+use leptos::*;
+#[cfg(feature = "ssr")]
+#[actix_web::main]
+async fn call() -> Server {
+    use axum::{routing::post, Router};
+    use leptos::*;
+    use leptos_axum::{generate_route_list, LeptosRoutes};
+    use leptos_tailwind::{app::*, fallback::file_and_error_handler};
+    use log::info;
+    // build our application with a route
+    let app = Router::new()
+        .route("/api/*fn_name", post(leptos_axum::handle_server_fns))
+        .leptos_routes(&leptos_options, routes, || view! { <App/> })
+        .fallback(file_and_error_handler)
+        .with_state(leptos_options);
+
+    // run our app with hyper
+    // `axum::Server` is a re-export of `hyper::Server`
+    info!("listening on http://{}", &addr);
+    axum::Server::bind(&addr).serve(app.into_make_service())
 }

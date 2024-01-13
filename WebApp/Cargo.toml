@@ -1,35 +1,31 @@
 [package]
-name = "RHP-WebApi"
-
+name = "leptos-tailwind"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-#axum = {version="0.6.20", optional=false }
-futures = "0.3.28"
-leptos = { version = "0.5.1", features = [] }
-#leptos_axum = { version = "0.5.2", default-features = false, features = ["wasm"], optional=false}
-nohash-hasher = "0.2.0"
-pipe = { version = "0.4.0", features = ["bidirectional"] }
-read_write = "0.1.2"
-strum = "0.25.0"
-strum_macros = "0.25.1"
-tokio = {version="1.32.0", features=["full"], optional=true}
-async-std = { version = "1", features = ["attributes", "tokio1"] }
-tower = {version="0.4.13", optional=true}
-tower-http = { version = "0.4", features = ["fs"], optional = true }
-hyper = { version = "0.14.27", features = ["full"] }
-os_pipe = "1.1.4"
-interprocess = "1.2.1"
-serde = "1.0.190"
-cfg-if = "1.0.0"
-leptos_meta = "0.5.2"
-leptos_router = "0.5.2"
-tracing = {version="0.1.40", optional=true}
-leptos_axum = {version="0.5.4", optional = true }
 axum = { version = "0.6.18", optional = true }
+console_error_panic_hook = "0.1.7"
+console_log = "1"
+cfg-if = "1"
+
+log = "0.4.17"
+simple_logger = "4"
+tokio = { version = "1.28.1", optional = true }
+tower = { version = "0.4.13", optional = true }
+tower-http = { version = "0.4", features = ["fs"], optional = true }
+wasm-bindgen = "0.2.84"
+thiserror = "1.0.40"
+tracing = { version = "0.1.37", optional = true }
+http = "0.2.9"
+leptos = "0.5.4"
+leptos_meta = "0.5.4"
+leptos_axum = {version="0.5.4", optional = true }
+leptos_router = "0.5.4"
+
 [features]
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
 ssr = [
@@ -43,54 +39,28 @@ ssr = [
     "leptos_router/ssr",
     "dep:tracing",
 ]
-# Defines a size-optimized profile for the WASM bundle in release mode
-[lib]
-crate-type = ["cdylib", "rlib"]
-
-[build]
-rustflags = ["-C", "prefer-dynamic", "-C", "rpath"]
-
-[profile.release]
-opt-level = "z"
-lto=true
-codegenunits=1
-strip = true
-#panic = "abort"
 
 [package.metadata.cargo-all-features]
 denylist = ["axum", "tokio", "tower", "tower-http", "leptos_axum"]
 skip_feature_sets = [["ssr", "hydrate"]]
 
-# Defines a size-optimized profile for the WASM bundle in release mode
-[profile.wasm-release]
-inherits = "release"
-opt-level = 'z'
-lto = true
-codegen-units = 1
-panic = "abort"
-
 [package.metadata.leptos]
-# The name used by wasm-bindgen/cargo-leptos for the JS/WASM bundle. Defaults to the crate name
-output-name = "{{project-name}}"
-
+# The name used by wasm-bindgen/cargo-leptos for the JS/WASM bundle. Defaults to the crate name   
+output-name = "tailwind"
 # The site root folder is where cargo-leptos generate all output. WARNING: all content of this folder will be erased on a rebuild. Use it in your server setup.
 site-root = "target/site"
-
 # The site-root relative folder where all compiled output (JS, WASM and CSS) is written
-# Defaults to pkg
+# Defaults to pkg	
 site-pkg-dir = "pkg"
-
-# [Optional] The source CSS file. If it ends with .sass or .scss then it will be compiled by dart-sass into CSS. The CSS is optimized by Lightning CSS before being written to <site-root>/<site-pkg>/app.css
-style-file = "style/main.scss"
-# Assets source dir. All files found here will be copied and synchronized to site-root.
-# The assets-dir cannot have a sub directory with the same name/path as site-pkg-dir.
+# The tailwind input file.
 #
-# Optional. Env: LEPTOS_ASSETS_DIR.
-assets-dir = "public"
+# Optional, Activates the tailwind build
+tailwind-input-file = "style/tailwind.css"
 
+# [Optional] Files in the asset-dir will be copied to the site-root directory
+assets-dir = "public"
 # The IP and port (ex: 127.0.0.1:3000) where the server serves the content. Use it in your server setup.
 site-addr = "127.0.0.1:3000"
-
 # The port to use for automatic reload monitoring
 reload-port = 3001
 
@@ -107,11 +77,12 @@ browserquery = "defaults"
 watch = false
 
 # The environment Leptos will run in, usually either "DEV" or "PROD"
-env = "PROD"
+env = "DEV"
 
 # The features to use when compiling the bin target
 #
 # Optional. Can be over-ridden with the command line parameter --bin-features
+bin-features = ["ssr"]
 
 # If the --no-default-features flag should be used when compiling the bin target
 #
@@ -127,8 +98,3 @@ lib-features = ["hydrate"]
 #
 # Optional. Defaults to false.
 lib-default-features = false
-
-# The profile to use for the lib target when compiling for release
-#
-# Optional. Defaults to "release".
-lib-profile-release = "wasm-release"
