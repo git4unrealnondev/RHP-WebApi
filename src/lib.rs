@@ -30,9 +30,8 @@ pub fn return_info() -> sharedtypes::PluginInfo {
         }),
     }
 }
-#[cfg(feature = "ssr")]
 #[no_mangle]
-pub fn on_start(reader: &mut os_pipe::PipeReader, writer: &mut os_pipe::PipeWriter) {
+pub fn on_start() {
     task::block_on(call());
 }
 
@@ -61,23 +60,27 @@ async fn call() -> Server {
 
 use crate::app::*;
 use leptos::*;
-#[cfg(feature = "ssr")]
 #[actix_web::main]
 async fn call() -> Server {
-    use axum::{routing::post, Router};
+    use axum;
+    use axum::Router;
     use leptos::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
-    use leptos_tailwind::{app::*, fallback::file_and_error_handler};
-    use log::info;
+    use leptos_tailwind::{app::*, fallback::file_and_error_handler}; // build our application with a route
+    let conf = get_configuration(None).await.unwrap();
+    let addr = conf.leptos_options.site_addr;
+    let leptos_options = conf.leptos_options;
+    // Generate the list of routes in your Leptos App
+    let routes = generate_route_list(App);
+
     // build our application with a route
     let app = Router::new()
-        .route("/api/*fn_name", post(leptos_axum::handle_server_fns))
-        .leptos_routes(&leptos_options, routes, || view! { <App/> })
+        .leptos_routes(&leptos_options, routes, App)
         .fallback(file_and_error_handler)
         .with_state(leptos_options);
-
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
-    info!("listening on http://{}", &addr);
-    axum::Server::bind(&addr).serve(app.into_make_service())
+
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    axum::serve(listener, app.into_make_service())
 }
