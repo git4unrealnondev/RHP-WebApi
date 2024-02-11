@@ -1,6 +1,7 @@
 #[path = "../../../src/scr/sharedtypes.rs"]
 mod sharedtypes;
 
+use tokio; // build our application with a route
 mod app;
 mod fallback;
 use crate::app::*;
@@ -60,13 +61,12 @@ async fn call() -> Server {
 
 use crate::app::*;
 use leptos::*;
-#[actix_web::main]
-async fn call() -> Server {
+async fn call() {
+    use crate::app::*;
     use axum;
     use axum::Router;
     use leptos::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
-    use leptos_tailwind::{app::*, fallback::file_and_error_handler}; // build our application with a route
     let conf = get_configuration(None).await.unwrap();
     let addr = conf.leptos_options.site_addr;
     let leptos_options = conf.leptos_options;
@@ -74,10 +74,8 @@ async fn call() -> Server {
     let routes = generate_route_list(App);
 
     // build our application with a route
-    let app = Router::new()
-        .leptos_routes(&leptos_options, routes, App)
-        .fallback(file_and_error_handler)
-        .with_state(leptos_options);
+    let app = Router::new().leptos_routes(&leptos_options, routes, App);
+    //.with_state(leptos_options);
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
 

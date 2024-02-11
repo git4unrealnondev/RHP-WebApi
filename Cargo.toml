@@ -17,7 +17,7 @@ pipe = { version = "0.4.0", features = ["bidirectional"] }
 read_write = "0.1.2"
 strum = "0.25.0"
 strum_macros = "0.25.1"
-tokio = {version="1.32.0", features=["full"], optional=true}
+tokio = {version="1.32.0", features=["full"], optional=false}
 async-std = { version = "1", features = ["attributes", "tokio1"] }
 tower = {version="0.4.13", optional=true}
 tower-http = { version = "0.4", features = ["fs"], optional = true }
@@ -29,16 +29,16 @@ cfg-if = "1.0.0"
 leptos_meta = "0.5.2"
 leptos_router = "0.5.2"
 tracing = {version="0.1.40", optional=true}
-leptos_axum = {version="0.5.4", optional = true }
-axum = { version = "0.6.18", optional = true }
+leptos_axum = {version="0.5.4", optional = false }
+axum = { version = "0.7", optional = false }
 [features]
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
 ssr = [
-    "dep:axum",
-    "dep:tokio",
+    #"dep:axum",
+    #"dep:tokio",
     "dep:tower",
     "dep:tower-http",
-    "dep:leptos_axum",
+    #"dep:leptos_axum",
     "leptos/ssr",
     "leptos_meta/ssr",
     "leptos_router/ssr",
@@ -46,7 +46,7 @@ ssr = [
 ]
 # Defines a size-optimized profile for the WASM bundle in release mode
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["dylib"]
 
 [build]
 rustflags = ["-C", "prefer-dynamic", "-C", "rpath"]
